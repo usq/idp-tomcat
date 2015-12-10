@@ -31,10 +31,12 @@ public class WebController {
 			conn = getConnection();//  DriverManager.getConnection("jdbc:mysql://localhost:8889/testdb", "root", "root");
 					
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT * from testtable");
+			ResultSet re = stm.executeQuery("SELECT * from testtable where id = "+id);
+			
+			
 			if(re.next())
 			{
-				s = re.getString(Integer.parseInt(id));				
+				s = re.getString(2);				
 			}
 			
 			System.out.println(s);
