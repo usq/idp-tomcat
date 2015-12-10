@@ -34,12 +34,10 @@ public class WebController {
 			ResultSet re = stm.executeQuery("SELECT * from testtable");
 			if(re.next())
 			{
-				s = re.getString(2);
-				
+				s = re.getString(Integer.parseInt(id));				
 			}
 			
 			System.out.println(s);
-			
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
