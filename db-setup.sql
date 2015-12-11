@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost:8889
--- Generation Time: Dec 10, 2015 at 11:19 PM
+-- Generation Time: Dec 11, 2015 at 11:56 AM
 -- Server version: 5.5.42
 -- PHP Version: 5.6.10
 
@@ -13,8 +13,18 @@ SET time_zone = "+00:00";
 --
 -- Database: `testdb`
 --
-CREATE DATABASE IF NOT EXISTS `testdb` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `testdb`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `datatable`
+--
+
+DROP TABLE IF EXISTS `datatable`;
+CREATE TABLE IF NOT EXISTS `datatable` (
+  `id` int(10) unsigned NOT NULL,
+  `content` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -23,14 +33,27 @@ USE `testdb`;
 --
 
 DROP TABLE IF EXISTS `testtable`;
-CREATE TABLE `testtable` (
+CREATE TABLE IF NOT EXISTS `testtable` (
   `id` int(10) unsigned NOT NULL,
   `formtext` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `testtable`
+--
+
+INSERT INTO `testtable` (`id`, `formtext`) VALUES
+(1, '{"foobar":"bar"}');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `datatable`
+--
+ALTER TABLE `datatable`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `testtable`
@@ -43,7 +66,12 @@ ALTER TABLE `testtable`
 --
 
 --
+-- AUTO_INCREMENT for table `datatable`
+--
+ALTER TABLE `datatable`
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
+--
 -- AUTO_INCREMENT for table `testtable`
 --
 ALTER TABLE `testtable`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;

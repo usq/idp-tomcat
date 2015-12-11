@@ -26,10 +26,8 @@ public class WebController {
 		Connection conn = null;
 		String s = "error";
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
 			
-			conn = getConnection();//  DriverManager.getConnection("jdbc:mysql://localhost:8889/testdb", "root", "root");
-					
+			conn = getConnection();
 			Statement stm = conn.createStatement();
 			ResultSet re = stm.executeQuery("SELECT * from testtable where id = "+id);
 			
@@ -55,12 +53,46 @@ public class WebController {
 		
 		
 		return s;
-		//"";
+	}
+	
+	@GET
+	@Path("/data/{id}")
+	@Produces("application/json")
+	public String data(@PathParam("id") String id) throws ClassNotFoundException 
+	{ 
+		Connection conn = null;
+		String s = "error";
+		try {
+			conn = getConnection();
+			Statement stm = conn.createStatement();
+			ResultSet re = stm.executeQuery("SELECT * from datatable where id = "+id);
+			
+			if(re.next())
+			{
+				s = re.getString(2);				
+			}
+			
+			System.out.println(s);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+		return s;
 	}
 	
 	public static Connection getConnection() throws SQLException {
         Connection conn = null;
         try{
+        	
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             String url = "jdbc:mysql://localhost:8889/testdb";
             String user = "root";
