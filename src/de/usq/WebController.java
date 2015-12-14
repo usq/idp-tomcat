@@ -4,8 +4,11 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 
 import javax.ws.rs.*;
+
+
 
 @Path("/rest")  
 public class WebController {
@@ -15,7 +18,6 @@ public class WebController {
 	@Produces("application/json")
 	public String test() {
 		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
-
 	}
 	
 	@GET
@@ -30,7 +32,6 @@ public class WebController {
 			conn = getConnection();
 			Statement stm = conn.createStatement();
 			ResultSet re = stm.executeQuery("SELECT * from testtable where id = "+id);
-			
 			
 			if(re.next())
 			{
@@ -55,6 +56,17 @@ public class WebController {
 		return s;
 	}
 	
+	
+	@POST
+	@Path("/data/{id}")
+	@Consumes("application/json")
+	@Produces("application/json")
+	public String postData(@PathParam("id") String id, @FormParam("form") String json)
+	{
+		System.out.println("json: " + json);
+		return "{}";
+	}
+	
 	@GET
 	@Path("/data/{id}")
 	@Produces("application/json")
@@ -64,9 +76,11 @@ public class WebController {
 		String s = "error";
 		try {
 			conn = getConnection();
-			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT * from datatable where id = "+id);
 			
+			PreparedStatement statement = conn.prepareStatement("SELECT * from datatable where id =?");
+			statement.setInt(1, Integer.parseInt(id));
+			
+			ResultSet re = statement.executeQuery();
 			if(re.next())
 			{
 				s = re.getString(2);				
