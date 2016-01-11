@@ -61,10 +61,33 @@ public class WebController {
 	@Path("/data/{id}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String postData(@PathParam("id") String id, @FormParam("form") String json)
+	public String postData(@PathParam("id") String id,String json)
 	{
 		System.out.println("json: " + json);
-		return "{}";
+		
+		Connection conn = null;
+		String s = "error";
+		try {
+			conn = getConnection();
+			
+			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
+			statement.setString(1, json);
+			statement.setInt(2, Integer.parseInt(id));
+			
+			statement.executeUpdate();
+			statement.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return "";
 	}
 	
 	@GET
