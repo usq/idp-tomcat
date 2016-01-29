@@ -131,9 +131,14 @@ public class WebController {
         try{
         	
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            String url = "jdbc:mysql://localhost:8889/testdb";
+            String url = "jdbc:mysql://192.168.99.100:3306/testdb";
             String user = "root";
-            String password = "root";
+            String password = "";
+            
+//            url = "jdbc:mysql://localhost:8889/testdb";
+//            user = "root";
+//            password = "root";
+
 
             conn = (Connection) DriverManager.getConnection(url, user, password);
         }catch(ClassNotFoundException e){
