@@ -28,9 +28,7 @@ public class WebController {
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
-		String s = "error";
 		try {
-			System.out.println("getting connection");
 			conn = getConnection();
 			String query = "insert into testtable (formtext) values (?)";
 			System.out.println("preparing");
