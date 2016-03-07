@@ -20,6 +20,53 @@ public class WebController {
 		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
 	}
 	
+	@POST
+	@Path("/form")
+	@Produces("application/json")
+	public String createForm(String data)
+	{
+		System.out.println("got: " + data);
+		String response = "";
+		Connection conn = null;
+		String s = "error";
+		try {
+			System.out.println("getting connection");
+			conn = getConnection();
+			String query = "insert into testtable (formtext) values (?)";
+			System.out.println("preparing");
+			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			statement.setString(1, data);
+			System.out.println("executing: " + statement.toString());
+			int affectedRows = statement.executeUpdate();
+			System.out.println("affected: " + affectedRows);
+			ResultSet result = statement.getGeneratedKeys();
+			if(result.next())
+			{
+				long id = result.getLong(1);
+				response = "{\"identifier\":\""+ id + "\"}";
+			}
+			else
+			{
+				response = "error inserting";
+			}
+
+		} catch (SQLException e) {
+			response = "{error: true }";
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		
+		System.out.println(response);
+		return response;
+	}
+	
 	@GET
 	@Path("/form/{id}")
 	@Produces("application/json")
@@ -135,9 +182,9 @@ public class WebController {
             String user = "root";
             String password = "";
             
-//            url = "jdbc:mysql://localhost:8889/testdb";
-//            user = "root";
-//            password = "root";
+            url = "jdbc:mysql://localhost:8889/testdb";
+            user = "root";
+            password = "root";
 
 
             conn = (Connection) DriverManager.getConnection(url, user, password);
