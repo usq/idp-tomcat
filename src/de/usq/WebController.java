@@ -34,12 +34,12 @@ public class WebController {
 		try {
 			conn = getConnection();
 			String query = "insert into testtable (formtext) values (?)";
-			System.out.println("preparing");
+			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, data);
-			System.out.println("executing: " + statement.toString());
+			
 			int affectedRows = statement.executeUpdate();
-			System.out.println("affected: " + affectedRows);
+			
 			ResultSet result = statement.getGeneratedKeys();
 			if(result.next())
 			{
@@ -195,11 +195,11 @@ public class WebController {
 	}
 	
 	
-	@POST
+	@PUT
 	@Path("/data/{id}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String postData(@PathParam("id") String id,String json)
+	public String updateData(@PathParam("id") String id,String json)
 	{
 		System.out.println("json: " + json);
 		
