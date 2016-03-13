@@ -4,9 +4,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.sql.PreparedStatement;
 
 import javax.ws.rs.*;
+
+import com.mysql.jdbc.StringUtils;
 
 
 
@@ -66,6 +69,51 @@ public class WebController {
 	}
 	
 	@GET
+	@Path("/form/ids")
+	@Produces("application/json")
+	public String formIDs() throws ClassNotFoundException
+	{
+		Connection conn = null;
+		String s = "error";
+		try {
+			
+			conn = getConnection();
+			Statement stm = conn.createStatement();
+			ResultSet re = stm.executeQuery("SELECT ID from testtable ");
+			StringBuffer b = new StringBuffer();
+			b.append("{\"ids\":[");
+			while(re.next())
+			{
+				int i = re.getInt(1);
+				b.append(i);	
+				b.append(",");
+			}
+			
+			
+			b.deleteCharAt(b.length() - 1); //remove last ,
+			b.append("]}");
+			
+			s = b.toString();
+			System.out.println(s);
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+		return s;
+	}
+	
+	@GET
 	@Path("/form/{id}")
 	@Produces("application/json")
 	public String form(@PathParam("id") String id) throws ClassNotFoundException 
@@ -111,7 +159,6 @@ public class WebController {
 		System.out.println("json: " + json);
 		
 		Connection conn = null;
-		String s = "error";
 		try {
 			conn = getConnection();
 			
