@@ -68,6 +68,8 @@ public class WebController {
 		return response;
 	}
 	
+	
+	
 	@GET
 	@Path("/form/ids")
 	@Produces("application/json")
@@ -147,6 +149,49 @@ public class WebController {
 		
 		
 		return s;
+	}
+	
+	@PUT
+	@Path("/form/{id}")
+	@Produces("application/json")
+	public String updateForm(@PathParam("id") String id, String data)
+	{
+		String response = "";
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			String query = "update testtable set formtext=? where id = ?";
+			System.out.println("preparing");
+			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			statement.setString(1, data);
+			statement.setString(2, id);
+			System.out.println("executing: " + statement.toString());
+			int affectedRows = statement.executeUpdate();
+			System.out.println("affected: " + affectedRows);
+			
+			if(affectedRows == 1)
+			{
+				response = "{\"update\":\"ok\"}";
+			}
+			else
+			{
+				response = "error inserting";
+			}
+
+		} catch (SQLException e) {
+			response = "{error: true }";
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+		System.out.println(response);
+		return response;
 	}
 	
 	
