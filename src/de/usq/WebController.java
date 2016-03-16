@@ -23,6 +23,11 @@ public class WebController {
 		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
 	}
 	
+	
+	//
+	// ----------------- FORM -----------------
+	//
+	
 	@POST
 	@Path("/form")
 	@Produces("application/json")
@@ -195,26 +200,41 @@ public class WebController {
 	}
 	
 	
-	@PUT
-	@Path("/data/{id}")
-	@Consumes("application/json")
+	//
+	// ----------------- DATA -----------------
+	//
+	
+	@POST
+	@Path("/data")
 	@Produces("application/json")
-	public String updateData(@PathParam("id") String id,String json)
+	public String createData(String data)
 	{
-		System.out.println("json: " + json);
-		
+		System.out.println("got: " + data);
+		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
+			String query = "insert into datatable (content) values (?)";
 			
-			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
-			statement.setString(1, json);
-			statement.setInt(2, Integer.parseInt(id));
+			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			statement.setString(1, data);
 			
-			statement.executeUpdate();
-			statement.close();
+			int affectedRows = statement.executeUpdate();
 			
+			ResultSet result = statement.getGeneratedKeys();
+			if(result.next())
+			{
+				long id = result.getLong(1);
+				response = "{\"identifier\":\""+ id + "\"}";
+			}
+			else
+			{
+				response = "error inserting";
+			}
+
 		} catch (SQLException e) {
+			response = "{error: true }";
+			System.out.println(response);
 			e.printStackTrace();
 		}
 		finally {
@@ -224,7 +244,10 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		return "";
+
+		
+		System.out.println(response);
+		return response;
 	}
 	
 	@GET
@@ -263,6 +286,41 @@ public class WebController {
 		return s;
 	}
 	
+	@PUT
+	@Path("/data/{id}")
+	@Consumes("application/json")
+	@Produces("application/json")
+	public String updateData(@PathParam("id") String id,String json)
+	{
+		System.out.println("json: " + json);
+		
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			
+			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
+			statement.setString(1, json);
+			statement.setInt(2, Integer.parseInt(id));
+			
+			statement.executeUpdate();
+			statement.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return "";
+	}
+	
+	//
+	// ----------------- HELPER -----------------
+	//
 	public static Connection getConnection() throws SQLException {
         Connection conn = null;
         try{
