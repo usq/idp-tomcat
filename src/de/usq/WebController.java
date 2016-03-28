@@ -73,8 +73,6 @@ public class WebController {
 		return response;
 	}
 	
-	
-	
 	@GET
 	@Path("/form/ids")
 	@Produces("application/json")
@@ -88,12 +86,15 @@ public class WebController {
 			Statement stm = conn.createStatement();
 			ResultSet re = stm.executeQuery("SELECT ID from testtable ");
 			StringBuffer b = new StringBuffer();
-			b.append("{\"ids\":[");
+			b.append("{\"forms\":[");
 			while(re.next())
 			{
 				int i = re.getInt(1);
+				b.append("{ \"id\": ");
 				b.append(i);	
-				b.append(",");
+				b.append(", \"label\": \"");
+				b.append(i);
+				b.append("\" } ,");
 			}
 			
 			
@@ -115,7 +116,6 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
 		
 		return s;
 	}
@@ -251,10 +251,56 @@ public class WebController {
 	}
 	
 	@GET
+	@Path("/data/ids")
+	@Produces("application/json")
+	public String dataIDs() throws ClassNotFoundException
+	{
+		Connection conn = null;
+		String s = "error";
+		try {
+			
+			conn = getConnection();
+			Statement stm = conn.createStatement();
+			ResultSet re = stm.executeQuery("SELECT ID from datatable ");
+			StringBuffer b = new StringBuffer();
+			b.append("{\"datas\":[");
+			while(re.next())
+			{
+				int i = re.getInt(1);
+				b.append("{ \"id\": ");
+				b.append(i);	
+				b.append(", \"label\": \"");
+				b.append(i);
+				b.append("\" } ,");
+			}
+			
+			b.deleteCharAt(b.length() - 1); //remove last ,
+			b.append("]}");
+			
+			s = b.toString();
+			System.out.println(s);
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return s;
+	}
+	
 	@Path("/data/{id}")
 	@Produces("application/json")
 	public String data(@PathParam("id") String id) throws ClassNotFoundException 
 	{ 
+		System.out.println("do u even try?");
 		Connection conn = null;
 		String s = "error";
 		try {
@@ -318,9 +364,11 @@ public class WebController {
 		return "";
 	}
 	
+	
 	//
 	// ----------------- HELPER -----------------
 	//
+	
 	public static Connection getConnection() throws SQLException {
         Connection conn = null;
         try{
