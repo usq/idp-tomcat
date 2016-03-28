@@ -86,7 +86,7 @@ public class WebController {
 			Statement stm = conn.createStatement();
 			ResultSet re = stm.executeQuery("SELECT ID from testtable ");
 			StringBuffer b = new StringBuffer();
-			b.append("{\"forms\":[");
+			b.append("{\"formList\":[");
 			while(re.next())
 			{
 				int i = re.getInt(1);
@@ -263,7 +263,7 @@ public class WebController {
 			Statement stm = conn.createStatement();
 			ResultSet re = stm.executeQuery("SELECT ID from datatable ");
 			StringBuffer b = new StringBuffer();
-			b.append("{\"datas\":[");
+			b.append("{\"dataList\":[");
 			while(re.next())
 			{
 				int i = re.getInt(1);
@@ -299,8 +299,7 @@ public class WebController {
 	@Path("/data/{id}")
 	@Produces("application/json")
 	public String data(@PathParam("id") String id) throws ClassNotFoundException 
-	{ 
-		System.out.println("do u even try?");
+	{
 		Connection conn = null;
 		String s = "error";
 		try {
