@@ -296,6 +296,7 @@ public class WebController {
 		return s;
 	}
 	
+	@GET
 	@Path("/data/{id}")
 	@Produces("application/json")
 	public String data(@PathParam("id") String id) throws ClassNotFoundException 
@@ -326,7 +327,6 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
 		
 		return s;
 	}
