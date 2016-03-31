@@ -4,12 +4,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.sql.PreparedStatement;
-
 import javax.ws.rs.*;
-
-import com.mysql.jdbc.StringUtils;
 
 
 
