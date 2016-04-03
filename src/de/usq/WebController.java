@@ -25,19 +25,20 @@ public class WebController {
 	//
 	
 	@POST
-	@Path("/form")
+	@Path("/form/{label}")
 	@Produces("application/json")
-	public String createForm(String data)
+	public String createForm(@PathParam("label") String label, String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into testtable (formtext) values (?)";
+			String query = "insert into testtable (label, formtext) values (?, ?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, data);
+			statement.setString(1, label);
+			statement.setString(2, data);
 			
 			int affectedRows = statement.executeUpdate();
 			
@@ -80,21 +81,31 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT ID from testtable ");
+			ResultSet re = stm.executeQuery("SELECT ID,LABEL from testtable");
+			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"formList\":[");
+			
+			boolean isEmpty = true;
 			while(re.next())
 			{
-				int i = re.getInt(1);
+				isEmpty = false;
+				
+				int id = re.getInt(1);
 				b.append("{ \"id\": ");
-				b.append(i);	
+				b.append(id);
+				
+				String label = re.getString(2);
 				b.append(", \"label\": \"");
-				b.append(i);
+				b.append(label);
 				b.append("\" } ,");
 			}
 			
+			if (!isEmpty)
+			{
+				b.deleteCharAt(b.length() - 1); //remove last ,
+			}
 			
-			b.deleteCharAt(b.length() - 1); //remove last ,
 			b.append("]}");
 			
 			s = b.toString();
@@ -131,7 +142,7 @@ public class WebController {
 			
 			if(re.next())
 			{
-				s = re.getString(2);				
+				s = re.getString(3);				
 			}
 			
 			System.out.println(s);
@@ -263,7 +274,6 @@ public class WebController {
 			statement.setInt(1, Integer.parseInt(formid));
 			
 			ResultSet re = statement.executeQuery();
-//			ResultSet re = stm.executeQuery("SELECT ID from datatable ");
 			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"dataList\":[");
