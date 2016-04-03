@@ -221,7 +221,7 @@ public class WebController {
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into datatable (formid, label, content) values (?, ?)";
+			String query = "insert into datatable (formid, content) values (?, ?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, formid);
