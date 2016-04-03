@@ -201,19 +201,20 @@ public class WebController {
 	//
 	
 	@POST
-	@Path("/data")
+	@Path("/data/{formid}")
 	@Produces("application/json")
-	public String createData(String data)
+	public String createData(@PathParam("formid") String formid, String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into datatable (content) values (?)";
+			String query = "insert into datatable (formid, label, content) values (?, ?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, data);
+			statement.setString(1, formid);
+			statement.setString(2, data);
 			
 			int affectedRows = statement.executeUpdate();
 			
@@ -247,9 +248,9 @@ public class WebController {
 	}
 	
 	@GET
-	@Path("/data/ids")
+	@Path("/data/ids/{formid}")
 	@Produces("application/json")
-	public String dataIDs() throws ClassNotFoundException
+	public String dataIDs(@PathParam("formid") String formid) throws ClassNotFoundException
 	{
 		Connection conn = null;
 		String s = "error";
@@ -257,20 +258,36 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT ID from datatable ");
+			
+			PreparedStatement statement = conn.prepareStatement("SELECT * from datatable where formid =?");
+			statement.setInt(1, Integer.parseInt(formid));
+			
+			ResultSet re = statement.executeQuery();
+//			ResultSet re = stm.executeQuery("SELECT ID from datatable ");
+			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"dataList\":[");
+			
+			boolean isEmpty = true;
 			while(re.next())
 			{
-				int i = re.getInt(1);
+				isEmpty = false;
+				
+				int id = re.getInt(1);
 				b.append("{ \"id\": ");
-				b.append(i);	
+				b.append(id);
+				
+				int label = re.getInt(1);
 				b.append(", \"label\": \"");
-				b.append(i);
+				b.append(label);
 				b.append("\" } ,");
 			}
 			
-			b.deleteCharAt(b.length() - 1); //remove last ,
+			if (!isEmpty)
+			{
+				b.deleteCharAt(b.length() - 1); //remove last ,
+			}
+			
 			b.append("]}");
 			
 			s = b.toString();
@@ -308,7 +325,7 @@ public class WebController {
 			ResultSet re = statement.executeQuery();
 			if(re.next())
 			{
-				s = re.getString(2);				
+				s = re.getString(3);				
 			}
 			
 			System.out.println(s);
