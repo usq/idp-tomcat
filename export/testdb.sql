@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost:8889
--- Generation Time: Apr 16, 2016 at 07:32 PM
+-- Generation Time: Apr 18, 2016 at 03:03 AM
 -- Server version: 5.5.42
 -- PHP Version: 5.6.10
 
@@ -26,18 +26,31 @@ DROP TABLE IF EXISTS `datatable`;
 CREATE TABLE `datatable` (
   `id` int(10) unsigned NOT NULL,
   `formid` int(11) NOT NULL,
+  `label` text NOT NULL,
   `content` text
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `datatable`
 --
 
-INSERT INTO `datatable` (`id`, `formid`, `content`) VALUES
-(23, 4, '{"k_dropdown1":"111","k_dropdown3":"132","k_dropdown5":"154"}'),
-(24, 8, '{"k_input":"sls"}'),
-(25, 8, '{"k_input":"trolol"}'),
-(26, 7, '{"k_input":"test data","k_checkbox":true,"k_dropdown":"133","k_radio":"142","k_date":null}');
+INSERT INTO `datatable` (`id`, `formid`, `label`, `content`) VALUES
+(0, 2, 'Test 1', '{"label":"Test 1","data":{"k_checkbox1":true,"k_checkbox2":true}}'),
+(1, 2, 'Test 2', '{"label":"Test 2","data":{"k_checkbox3":true,"k_checkbox5":true}}'),
+(2, 4, 'Test 1', '{"label":"Test 1","data":{"k_dropdown1":"111","k_dropdown3":"132"}}'),
+(3, 4, 'Test 2', '{"label":"Test 2","data":{"k_dropdown1":"111","k_dropdown3":"132","k_dropdown2":"122","k_dropdown4":"142"}}'),
+(4, 5, 'Test 1', '{"label":"Test 1","data":{"k_input1":"Andi","k_input2":"Michi"}}'),
+(5, 5, 'Test 2', '{"label":"Test 2","data":{"k_input1":"Andi","k_input2":"Michi","k_input3":"Flo","k_input4":"Ronald"}}'),
+(6, 6, 'Test 1', '{"label":"Test 1","data":{"k_radio2":"121","k_radio3":"132","k_radio4":"142"}}'),
+(7, 6, 'Test 2', '{"label":"Test 2","data":{"k_radio2":"122","k_radio3":"131","k_radio4":"142","k_radio1":"111","k_radio5":"155"}}'),
+(8, 7, 'Test 1', '{"label":"Test 1","data":{"k_input":"Hugo","k_checkbox":true,"k_dropdown":"133","k_radio":"141","k_date":null}}'),
+(9, 7, 'Test 2', '{"label":"Test 2","data":{"k_input":"Herbert","k_checkbox":false,"k_dropdown":"132","k_radio":"142","k_date":null}}'),
+(10, 8, 'Test 1', '{"label":"Test 1","data":{"k_input":"Andi"}}'),
+(11, 8, 'Test 2', '{"label":"Test 2","data":{"k_input":"Michi"}}'),
+(12, 9, 'Test 1', '{"label":"Test 1","data":{"k_input":"Hugo","k_checkbox":true,"k_dropdown":"1232","k_radio":"1242","k_checkboxIsRequired":true,"k_date":null}}'),
+(13, 9, 'Test 2', '{"label":"Test 2","data":{"k_input":"Herbert","k_checkbox":false,"k_dropdown":"1231","k_radio":"1242","k_checkboxIsRequired":true,"k_date":null,"k_inputIsRequired":"Test"}}'),
+(14, 9, 'Test 3', '{"label":"Test 3","data":{"k_input":"Franz","k_radio":"1241","k_checkboxIsRequired":true,"k_date":null}}'),
+(15, 9, 'Test 4', '{"label":"Test 4","data":{"k_input":"Paul","k_radio":"1242","k_date":null}}');
 
 -- --------------------------------------------------------
 
@@ -92,7 +105,7 @@ ALTER TABLE `testtable`
 -- AUTO_INCREMENT for table `datatable`
 --
 ALTER TABLE `datatable`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=27;
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=16;
 --
 -- AUTO_INCREMENT for table `testtable`
 --

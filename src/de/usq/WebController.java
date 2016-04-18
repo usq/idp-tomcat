@@ -212,20 +212,21 @@ public class WebController {
 	//
 	
 	@POST
-	@Path("/data/{formid}")
+	@Path("/data/{formid}/label/{label}")
 	@Produces("application/json")
-	public String createData(@PathParam("formid") String formid, String data)
+	public String createData(@PathParam("formid") String formid, @PathParam("label") String label, String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into datatable (formid, content) values (?, ?)";
+			String query = "insert into datatable (formid, label, content) values (?, ?, ?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, formid);
-			statement.setString(2, data);
+			statement.setString(2, label);
+			statement.setString(3, data);
 			
 			int affectedRows = statement.executeUpdate();
 			
@@ -283,11 +284,11 @@ public class WebController {
 			{
 				isEmpty = false;
 				
-				int id = re.getInt(1);
+				String id = re.getString(1);
 				b.append("{ \"id\": ");
 				b.append(id);
 				
-				int label = re.getInt(1);
+				String label = re.getString(3);
 				b.append(", \"label\": \"");
 				b.append(label);
 				b.append("\" } ,");
@@ -335,7 +336,7 @@ public class WebController {
 			ResultSet re = statement.executeQuery();
 			if(re.next())
 			{
-				s = re.getString(3);				
+				s = re.getString(4);				
 			}
 			
 			System.out.println(s);
@@ -355,10 +356,10 @@ public class WebController {
 	}
 	
 	@PUT
-	@Path("/data/{id}")
+	@Path("/data/{id}/label/{label}")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String updateData(@PathParam("id") String id,String json)
+	public String updateData(@PathParam("id") String id, @PathParam("label") String label, String json)
 	{
 		System.out.println("json: " + json);
 		
@@ -366,9 +367,18 @@ public class WebController {
 		try {
 			conn = getConnection();
 			
-			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
-			statement.setString(1, json);
-			statement.setInt(2, Integer.parseInt(id));
+//			This is how its done in the PUT form methods
+//			String query = "update testtable set formtext=? where id = ?";
+//			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+//			statement.setString(1, data);
+//			statement.setString(2, id);
+//			statement.executeUpdate();
+			
+			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set label =?, content =? where id =?");
+			
+			statement.setString(1, label);
+			statement.setString(2, json);
+			statement.setString(3, id);
 			
 			statement.executeUpdate();
 			statement.close();
