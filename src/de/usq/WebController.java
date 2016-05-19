@@ -25,19 +25,19 @@ public class WebController {
 	//
 	
 	@POST
-	@Path("/form/{label}")
+	@Path("/form/{metadata}")
 	@Produces("application/json")
-	public String createForm(@PathParam("label") String label, String data)
+	public String createForm(@PathParam("metadata") String metadata, String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into testtable (label, formtext) values (?, ?)";
+			String query = "insert into testtable (metadata, formtext) values (?, ?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, label);
+			statement.setString(1, metadata);
 			statement.setString(2, data);
 			
 			int affectedRows = statement.executeUpdate();
@@ -81,7 +81,7 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT ID,LABEL from testtable");
+			ResultSet re = stm.executeQuery("SELECT ID,METADATA from testtable");
 			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"formList\":[");
@@ -95,10 +95,10 @@ public class WebController {
 				b.append("{ \"id\": ");
 				b.append(id);
 				
-				String label = re.getString(2);
-				b.append(", \"label\": \"");
-				b.append(label);
-				b.append("\" } ,");
+				String metadata = re.getString(2);
+				b.append(", \"metadata\": ");
+				b.append(metadata);
+				b.append(" } ,");
 			}
 			
 			if (!isEmpty)
@@ -234,7 +234,7 @@ public class WebController {
 			if(result.next())
 			{
 				long id = result.getLong(1);
-				response = "{\"identifier\":\""+ id + "\"}";
+				response = "{ \"identifier\":\""+ id + "\" }";
 			}
 			else
 			{
@@ -242,7 +242,7 @@ public class WebController {
 			}
 
 		} catch (SQLException e) {
-			response = "{error: true }";
+			response = "{ error: true }";
 			System.out.println(response);
 			e.printStackTrace();
 		}
@@ -253,7 +253,6 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-
 		
 		System.out.println(response);
 		return response;
