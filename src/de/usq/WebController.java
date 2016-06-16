@@ -161,11 +161,11 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT * from testtable where id = "+id);
+			ResultSet re = stm.executeQuery("SELECT FORMTEXT from testtable where id = "+id);
 			
 			if(re.next())
 			{
-				s = re.getString(3);				
+				s = re.getString(1);
 			}
 			
 			System.out.println(s);
@@ -288,12 +288,10 @@ public class WebController {
 		Connection conn = null;
 		String s = "error";
 		try {
-			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
 			
-			PreparedStatement statement = conn.prepareStatement("SELECT ID,CONTENT from datatable where formid =?");
-			statement.setInt(1, Integer.parseInt(formid));
+			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable");
 			
 			ResultSet re = statement.executeQuery();
 			
