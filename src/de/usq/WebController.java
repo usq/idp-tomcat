@@ -6,11 +6,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import javax.ws.rs.*;
-
-
+import com.google.gson.*;
 
 @Path("/rest")  
 public class WebController {
+	
+	//
+	// ----------------- TEST -----------------
+	//
 
 	@GET
 	@Path("/test")
@@ -19,26 +22,45 @@ public class WebController {
 		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
 	}
 	
+	@GET
+	@Path("/parse")
+	@Produces("application/json")
+	public String parse() {
+		String json = "{\"key\": \"username\",\"type\": \"input\", \"object\": { \"name\": \"myObject\", \"array\": [\"Parsing succeded\", \"second\", \"third\"]}}";
+		System.out.println(json);
+		String parsedJSON = parse(json);
+		System.out.println(parsedJSON);
+		return parsedJSON;
+	}
+	
+	public String parse(String jsonLine) {
+	    JsonElement jelement = new JsonParser().parse(jsonLine);
+	    JsonObject  jobject = jelement.getAsJsonObject();
+	    jobject = jobject.getAsJsonObject("object");
+	    JsonArray jarray = jobject.getAsJsonArray("array");
+	    String result = jarray.get(0).toString();
+	    return result;
+	}
 	
 	//
 	// ----------------- FORM -----------------
 	//
 	
 	@POST
-	@Path("/form/{metadata}")
+	@Path("/form")
 	@Produces("application/json")
-	public String createForm(@PathParam("metadata") String metadata, String data)
+	public String createForm(String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into testtable (metadata, formtext) values (?, ?)";
+			
+			String query = "insert into testtable (formtext) values (?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, metadata);
-			statement.setString(2, data);
+			statement.setString(1, data);
 			
 			int affectedRows = statement.executeUpdate();
 			
@@ -81,7 +103,7 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT ID,METADATA from testtable");
+			ResultSet re = stm.executeQuery("SELECT ID,FORMTEXT from testtable");
 			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"formList\":[");
@@ -95,7 +117,8 @@ public class WebController {
 				b.append("{ \"id\": ");
 				b.append(id);
 				
-				String metadata = re.getString(2);
+				String formular = re.getString(2);
+				String metadata = getMetadataStringFromFormularString(formular);
 				b.append(", \"metadata\": ");
 				b.append(metadata);
 				b.append(" } ,");
@@ -164,9 +187,9 @@ public class WebController {
 	}
 	
 	@PUT
-	@Path("/form/{id}")
+	@Path("/form")
 	@Produces("application/json")
-	public String updateForm(@PathParam("id") String id, String data)
+	public String updateForm(String data)
 	{
 		String response = "";
 		Connection conn = null;
@@ -176,6 +199,7 @@ public class WebController {
 			System.out.println("preparing");
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, data);
+			String id = getIdStringFromFormularString(data);
 			statement.setString(2, id);
 			System.out.println("executing: " + statement.toString());
 			int affectedRows = statement.executeUpdate();
@@ -212,21 +236,19 @@ public class WebController {
 	//
 	
 	@POST
-	@Path("/data/{formid}/label/{label}")
+	@Path("/data")
 	@Produces("application/json")
-	public String createData(@PathParam("formid") String formid, @PathParam("label") String label, String data)
+	public String createData(String data)
 	{
 		System.out.println("got: " + data);
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			String query = "insert into datatable (formid, label, content) values (?, ?, ?)";
+			String query = "insert into datatable (content) values (?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, formid);
-			statement.setString(2, label);
-			statement.setString(3, data);
+			statement.setString(1, data);
 			
 			int affectedRows = statement.executeUpdate();
 			
@@ -270,7 +292,7 @@ public class WebController {
 			conn = getConnection();
 			Statement stm = conn.createStatement();
 			
-			PreparedStatement statement = conn.prepareStatement("SELECT * from datatable where formid =?");
+			PreparedStatement statement = conn.prepareStatement("SELECT ID,CONTENT from datatable where formid =?");
 			statement.setInt(1, Integer.parseInt(formid));
 			
 			ResultSet re = statement.executeQuery();
@@ -283,14 +305,21 @@ public class WebController {
 			{
 				isEmpty = false;
 				
-				String id = re.getString(1);
-				b.append("{ \"id\": ");
-				b.append(id);
+				String data = re.getString(1);
 				
-				String label = re.getString(3);
-				b.append(", \"label\": \"");
-				b.append(label);
-				b.append("\" } ,");
+				String currentFormId = getFormIdStringFromDataString(data);
+				
+				if (currentFormId == formid) {
+					String id = getIdStringFromDataString(data);
+					String metadata= getMetadataStringFromDataString(data);
+					
+					b.append("{ \"id\": ");
+					b.append(id);
+					
+					b.append(", \"metadata\": \"");
+					b.append(metadata);
+					b.append("\" } ,");
+				}
 			}
 			
 			if (!isEmpty)
@@ -355,10 +384,10 @@ public class WebController {
 	}
 	
 	@PUT
-	@Path("/data/{id}/label/{label}")
+	@Path("/data")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String updateData(@PathParam("id") String id, @PathParam("label") String label, String json)
+	public String updateData(String json)
 	{
 		System.out.println("json: " + json);
 		
@@ -366,18 +395,12 @@ public class WebController {
 		try {
 			conn = getConnection();
 			
-//			This is how its done in the PUT form methods
-//			String query = "update testtable set formtext=? where id = ?";
-//			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-//			statement.setString(1, data);
-//			statement.setString(2, id);
-//			statement.executeUpdate();
+			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
 			
-			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set label =?, content =? where id =?");
+			String id = getIdStringFromDataString(json);
 			
-			statement.setString(1, label);
-			statement.setString(2, json);
-			statement.setString(3, id);
+			statement.setString(1, json);
+			statement.setString(2, id);
 			
 			statement.executeUpdate();
 			statement.close();
@@ -399,6 +422,47 @@ public class WebController {
 	//
 	// ----------------- HELPER -----------------
 	//
+	
+	// formular > id	
+	public String getIdStringFromFormularString(String formularString) {
+		JsonElement dataElement = new JsonParser().parse(formularString);
+		JsonObject  idObject = dataElement.getAsJsonObject();
+	    idObject = idObject.getAsJsonObject("id");
+	    String idString = idObject.toString();
+	    return idString;
+	}
+	
+	// formular > metadata
+	public String getMetadataStringFromFormularString(String formularString) {
+		JsonElement formularElement = new JsonParser().parse(formularString);
+	    JsonObject  metadataObject = formularElement.getAsJsonObject();
+	    metadataObject = metadataObject.getAsJsonObject("metadata");
+	    String metadataString = metadataObject.toString();
+	    return metadataString;
+	}
+
+	// data > id	
+	public String getIdStringFromDataString(String dataString) {
+		//right now same shit as for forms
+	    return getIdStringFromFormularString(dataString);
+	}
+	
+	// data > formid	
+	public String getFormIdStringFromDataString(String dataString) {
+		JsonElement dataElement = new JsonParser().parse(dataString);
+	    JsonObject metadataObject = dataElement.getAsJsonObject();
+	    metadataObject = metadataObject.getAsJsonObject("metadata");
+	    JsonObject formIdObject = metadataObject.getAsJsonObject("form_id");
+	    String formIdString = formIdObject.toString();
+	    return formIdString;
+	}
+	
+	// data > metadata	
+	public String getMetadataStringFromDataString(String dataString) {
+		//right now same shit as for forms
+	    return getMetadataStringFromFormularString(dataString);
+	}
+	
 	
 	public static Connection getConnection() throws SQLException {
         Connection conn = null;
