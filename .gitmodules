@@ -1,0 +1,3 @@
+[submodule "submodules/gson"]
+	path = submodules/gson
+	url = https://github.com/google/gson.git
