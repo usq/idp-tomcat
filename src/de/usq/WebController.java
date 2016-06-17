@@ -19,7 +19,11 @@ public class WebController {
 	@Path("/test")
 	@Produces("application/json")
 	public String test() {
-		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
+		System.out.println("Request received: /rest/test");
+		String response = "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]"; 
+		System.out.println(response);
+		System.out.println();
+		return response;
 	}
 	
 	//
@@ -31,7 +35,9 @@ public class WebController {
 	@Produces("application/json")
 	public String createForm(String data)
 	{
-		System.out.println("got: " + data);
+		System.out.println("POST Request received: /rest/form"); 
+		System.out.println("Got data: "+data); 
+		
 		String response = "";
 		Connection conn = null;
 		try {
@@ -40,27 +46,22 @@ public class WebController {
 			String query = "insert into testtable (formtext) values (?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			
 			statement.setString(1, data);
-			
 			statement.executeUpdate();
-			
 			ResultSet result = statement.getGeneratedKeys();
+			statement.close();
+			
 			if(result.next())
 			{	
 				long id = result.getLong(1);
 				
-				System.out.println(data);
 				//replace the id
 				String updatedData = data.replaceAll("\"form_id\":\"###REPLACE_FORM_ID###\"", "\"form_id\":\""+id+"\"");				
-				System.out.println(updatedData);
 				
 				//update the data set with its just generated ID
 				PreparedStatement updateStatement = conn.prepareStatement("UPDATE testtable set formtext =? where id =?");
-				
 				updateStatement.setString(1, updatedData);
 				updateStatement.setLong(2, id);
-				
 				updateStatement.executeUpdate();
 				updateStatement.close();
 				
@@ -72,24 +73,21 @@ public class WebController {
 			}
 
 		} catch (SQLException e) {
-			response = "{error: true }";
+			response = "{ \"error\": true }"; 
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
 			try {
-//				TODO get id, replace id in formular and save it again (do it for data as well)
-//				int formId = 10; 
-//				data.replaceAll(/"\"form_id\":\"###REPLACE_FORM_ID###\""/, "\"form_id\":\""+formId+""\"");
-				
-				
 				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
-
-		
+		 
 		System.out.println(response);
+		System.out.println();
 		return response;
 	}
 	
@@ -98,42 +96,44 @@ public class WebController {
 	@Produces("application/json")
 	public String formIDs() throws ClassNotFoundException
 	{
+		System.out.println("GET Request received: /rest/ids"); 
+		
+		String response = "";
 		Connection conn = null;
-		String s = "error";
 		try {
-			
+			System.out.println("lol");
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT FORMTEXT from testtable");
+			ResultSet result = stm.executeQuery("SELECT FORMTEXT from testtable");
 			
-			StringBuffer b = new StringBuffer();
-			b.append("{\"formList\":[");
+			StringBuffer buffer = new StringBuffer();
+			buffer.append("{\"formList\":[");
 			
 			boolean isEmpty = true;
-			while(re.next())
+			while(result.next())
 			{
 				isEmpty = false;
 				
-				String formular = re.getString(1);
+				String formular = result.getString(1);
 				String metadata = getMetadataStringFromFormularString(formular);
-				b.append("{ \"metadata\": ");
-				b.append(metadata);
-				b.append("} ,");
+				buffer.append("{ \"metadata\": ");
+				buffer.append(metadata);
+				buffer.append("} ,");
 			}
 			
 			if (!isEmpty)
 			{
-				b.deleteCharAt(b.length() - 1); //remove last ,
+				buffer.deleteCharAt(buffer.length() - 1); //remove last ,
 			}
 			
-			b.append("]}");
+			buffer.append("]}");
 			
-			s = b.toString();
-			System.out.println(s);
-			
+			response = buffer.toString();
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			response = "{ \"error\": true }"; 
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -143,8 +143,10 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
-		return s;
+		 
+		System.out.println(response);
+		System.out.println();
+		return response;
 	}
 	
 	@GET
@@ -152,23 +154,25 @@ public class WebController {
 	@Produces("application/json")
 	public String form(@PathParam("id") String id) throws ClassNotFoundException 
 	{ 
+		System.out.println("GET Request received: /rest/form/"+id); 
+		
+		String response = ""; 
 		Connection conn = null;
-		String s = "error";
 		try {
 			
 			conn = getConnection();
-			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT FORMTEXT from testtable where id = "+id);
+			Statement statement = conn.createStatement();
+			ResultSet result = statement.executeQuery("SELECT FORMTEXT from testtable where id = "+id);
 			
-			if(re.next())
+			if(result.next())
 			{
-				s = re.getString(1);
+				response = result.getString(1);
 			}
 			
-			System.out.println(s);
-			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			response = "{ \"error\": true }"; 
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -178,9 +182,10 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
-		
-		return s;
+		 
+		System.out.println(response);
+		System.out.println();
+		return response;
 	}
 	
 	@PUT
@@ -188,23 +193,25 @@ public class WebController {
 	@Produces("application/json")
 	public String updateForm(String data)
 	{
+		System.out.println("PUT Request received: /rest/form"); 
+		System.out.println("Got data: "+data);
+		
 		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
+			
 			String query = "update testtable set formtext=? where id = ?";
-			System.out.println("preparing");
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, data);
 			String id = getIdStringFromFormularString(data);
 			statement.setString(2, id);
-			System.out.println("executing: " + statement.toString());
 			int affectedRows = statement.executeUpdate();
-			System.out.println("affected: " + affectedRows);
+			statement.close();
 			
 			if(affectedRows == 1)
 			{
-				response = "{\"update\":\"ok\"}";
+				response = "{ \"update\":\"ok\" }";
 			}
 			else
 			{
@@ -212,7 +219,9 @@ public class WebController {
 			}
 
 		} catch (SQLException e) {
-			response = "{error: true }";
+			response = "{ \"error\": true }";
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -224,6 +233,7 @@ public class WebController {
 		}
 
 		System.out.println(response);
+		System.out.println();
 		return response;
 	}
 	
@@ -237,7 +247,9 @@ public class WebController {
 	@Produces("application/json")
 	public String createData(String data)
 	{
-		System.out.println("got: " + data);
+		System.out.println("POST Request received: /rest/data"); 
+		System.out.println("Got data: "+data);
+		
 		String response = "";
 		Connection conn = null;
 		try {
@@ -246,25 +258,21 @@ public class WebController {
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, data);
-			
 			statement.executeUpdate();
-			
 			ResultSet result = statement.getGeneratedKeys();
+			statement.close();
+			
 			if(result.next())
 			{
 				long id = result.getLong(1);
 				
-				System.out.println(data);
 				//replace the id
 				String updatedData = data.replaceAll("\"data_id\":\"###REPLACE_DATA_ID###\"", "\"data_id\":\""+id+"\"");				
-				System.out.println(updatedData);
 				
 				//update the data set with its just generated ID
 				PreparedStatement updateStatement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
-				
 				updateStatement.setString(1, updatedData);
 				updateStatement.setLong(2, id);
-				
 				updateStatement.executeUpdate();
 				updateStatement.close();
 				
@@ -276,8 +284,9 @@ public class WebController {
 			}
 
 		} catch (SQLException e) {
-			response = "{ error: true }";
+			response = "{ \"error\": true }"; 
 			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -287,8 +296,9 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
+		 
 		System.out.println(response);
+		System.out.println();
 		return response;
 	}
 	
@@ -297,23 +307,26 @@ public class WebController {
 	@Produces("application/json")
 	public String dataIDs(@PathParam("formid") String formid) throws ClassNotFoundException
 	{
+		System.out.println("GET Request received: /rest/data/ids/"+formid); 
+		
+		String response = "";
 		Connection conn = null;
-		String s = "error";
 		try {
 			conn = getConnection();
 			conn.createStatement();
 			
 			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable");
 			
-			ResultSet re = statement.executeQuery();
+			ResultSet result = statement.executeQuery();
+			statement.close();
 			
-			StringBuffer b = new StringBuffer();
-			b.append("{\"dataList\":[");
+			StringBuffer buffer = new StringBuffer();
+			buffer.append("{\"dataList\":[");
 			
 			boolean isEmpty = true;
-			while(re.next())
+			while(result.next())
 			{
-				String data = re.getString(1);
+				String data = result.getString(1);
 				
 				String currentFormId = getFormIdStringFromDataString(data);
 				
@@ -322,25 +335,25 @@ public class WebController {
 					
 					String metadata= getMetadataStringFromDataString(data);
 					
-					b.append("{ \"metadata\": ");
-					b.append(metadata);
-					b.append("} ,");
+					buffer.append("{ \"metadata\": ");
+					buffer.append(metadata);
+					buffer.append("} ,");
 				}
 			}
 			
 			if (!isEmpty)
 			{
-				b.deleteCharAt(b.length() - 1); //remove last ,
+				buffer.deleteCharAt(buffer.length() - 1); //remove last ,
 			}
 			
-			b.append("]}");
+			buffer.append("]}");
 			
-			s = b.toString();
-			System.out.println(s);
-			
+			response  = buffer.toString();
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			response  = "{ \"error\": true }"; 
+			System.out.println(response );
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -350,8 +363,10 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
-		return s;
+		 
+		System.out.println(response );
+		System.out.println();
+		return response ;
 	}
 	
 	@GET
@@ -359,23 +374,27 @@ public class WebController {
 	@Produces("application/json")
 	public String data(@PathParam("id") String id) throws ClassNotFoundException 
 	{
+		System.out.println("GET Request received: /rest/data/"+id); 
+		
+		String response = "";
 		Connection conn = null;
-		String s = "error";
 		try {
 			conn = getConnection();
 			
 			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable where id =?");
 			statement.setInt(1, Integer.parseInt(id));
+			ResultSet result = statement.executeQuery();
+			statement.close();
 			
-			ResultSet re = statement.executeQuery();
-			if(re.next())
+			if(result.next())
 			{
-				s = re.getString(1);				
+				response = result.getString(1);				
 			}
 			
-			System.out.println(s);
-			
 		} catch (SQLException e) {
+			response = "{ \"error\": true }"; 
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -385,30 +404,44 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		
-		return s;
+		 
+		System.out.println(response);
+		System.out.println();
+		return response;
 	}
 	
 	@PUT
 	@Path("/data")
 	@Consumes("application/json")
 	@Produces("application/json")
-	public String updateData(String json)
+	public String updateData(String data)
 	{
-		System.out.println("json: " + json);
+		System.out.println("PUT Request received: /rest/data"); 
+		System.out.println("Got data: "+data);
 		
+		String response = "";
 		Connection conn = null;
 		try {
 			conn = getConnection();
 			
 			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
-			
-			statement.setString(1, json);
-			
-			statement.executeUpdate();
+			statement.setString(1, data);
+			int affectedRows = statement.executeUpdate();
 			statement.close();
 			
+			if(affectedRows == 1)
+			{
+				response = "{ \"update\":\"ok\" }";
+			}
+			else
+			{
+				response = "error inserting";
+			}
+			
 		} catch (SQLException e) {
+			response = "{ \"error\": true }"; 
+			System.out.println(response);
+			System.out.println();
 			e.printStackTrace();
 		}
 		finally {
@@ -418,7 +451,7 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
-		return "";
+		return response;
 	}
 	
 	
@@ -441,7 +474,6 @@ public class WebController {
 	    JsonObject  metadataObject = formularElement.getAsJsonObject();
 	    metadataObject = metadataObject.getAsJsonObject("metadata");
 	    String metadataString = metadataObject.toString();
-	    System.out.println(metadataString);
 	    return metadataString;
 	}
 
@@ -493,7 +525,6 @@ public class WebController {
             e.printStackTrace();
         }
             return conn;
-
     }
 }
 
