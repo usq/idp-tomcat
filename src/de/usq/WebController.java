@@ -22,26 +22,6 @@ public class WebController {
 		return "[{\"key\": \"username\",\"type\": \"input\",\"templateOptions\": {\"label\": \"Username\",\"placeholder\": \"johndoe\",\"required\": true,\"description\": \"Descriptive text\"}}, {\"key\": \"password\",\"type\": \"input\",\"templateOptions\": {\"type\": \"password\",\"label\": \"Password\",\"required\": true},\"expressionProperties\": {\"templateOptions.disabled\": \"!model.username\"}}]";
 	}
 	
-	@GET
-	@Path("/parse")
-	@Produces("application/json")
-	public String parse() {
-		String json = "{\"key\": \"username\",\"type\": \"input\", \"object\": { \"name\": \"myObject\", \"array\": [\"Parsing succeded\", \"second\", \"third\"]}}";
-		System.out.println(json);
-		String parsedJSON = parse(json);
-		System.out.println(parsedJSON);
-		return parsedJSON;
-	}
-	
-	public String parse(String jsonLine) {
-	    JsonElement jelement = new JsonParser().parse(jsonLine);
-	    JsonObject  jobject = jelement.getAsJsonObject();
-	    jobject = jobject.getAsJsonObject("object");
-	    JsonArray jarray = jobject.getAsJsonArray("array");
-	    String result = jarray.get(0).toString();
-	    return result;
-	}
-	
 	//
 	// ----------------- FORM -----------------
 	//
@@ -60,15 +40,31 @@ public class WebController {
 			String query = "insert into testtable (formtext) values (?)";
 			
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			
 			statement.setString(1, data);
 			
-			int affectedRows = statement.executeUpdate();
+			statement.executeUpdate();
 			
 			ResultSet result = statement.getGeneratedKeys();
 			if(result.next())
-			{
+			{	
 				long id = result.getLong(1);
-				response = "{\"identifier\":\""+ id + "\"}";
+				
+				System.out.println(data);
+				//replace the id
+				String updatedData = data.replaceAll("\"form_id\":\"###REPLACE_FORM_ID###\"", "\"form_id\":\""+id+"\"");				
+				System.out.println(updatedData);
+				
+				//update the data set with its just generated ID
+				PreparedStatement updateStatement = conn.prepareStatement("UPDATE testtable set formtext =? where id =?");
+				
+				updateStatement.setString(1, updatedData);
+				updateStatement.setLong(2, id);
+				
+				updateStatement.executeUpdate();
+				updateStatement.close();
+				
+				response = "{ \"identifier\":\""+ id + "\" }";
 			}
 			else
 			{
@@ -81,6 +77,11 @@ public class WebController {
 		}
 		finally {
 			try {
+//				TODO get id, replace id in formular and save it again (do it for data as well)
+//				int formId = 10; 
+//				data.replaceAll(/"\"form_id\":\"###REPLACE_FORM_ID###\""/, "\"form_id\":\""+formId+""\"");
+				
+				
 				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -103,7 +104,7 @@ public class WebController {
 			
 			conn = getConnection();
 			Statement stm = conn.createStatement();
-			ResultSet re = stm.executeQuery("SELECT ID,FORMTEXT from testtable");
+			ResultSet re = stm.executeQuery("SELECT FORMTEXT from testtable");
 			
 			StringBuffer b = new StringBuffer();
 			b.append("{\"formList\":[");
@@ -113,15 +114,11 @@ public class WebController {
 			{
 				isEmpty = false;
 				
-				int id = re.getInt(1);
-				b.append("{ \"id\": ");
-				b.append(id);
-				
-				String formular = re.getString(2);
+				String formular = re.getString(1);
 				String metadata = getMetadataStringFromFormularString(formular);
-				b.append(", \"metadata\": ");
+				b.append("{ \"metadata\": ");
 				b.append(metadata);
-				b.append(" } ,");
+				b.append("} ,");
 			}
 			
 			if (!isEmpty)
@@ -250,12 +247,27 @@ public class WebController {
 			PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, data);
 			
-			int affectedRows = statement.executeUpdate();
+			statement.executeUpdate();
 			
 			ResultSet result = statement.getGeneratedKeys();
 			if(result.next())
 			{
 				long id = result.getLong(1);
+				
+				System.out.println(data);
+				//replace the id
+				String updatedData = data.replaceAll("\"data_id\":\"###REPLACE_DATA_ID###\"", "\"data_id\":\""+id+"\"");				
+				System.out.println(updatedData);
+				
+				//update the data set with its just generated ID
+				PreparedStatement updateStatement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
+				
+				updateStatement.setString(1, updatedData);
+				updateStatement.setLong(2, id);
+				
+				updateStatement.executeUpdate();
+				updateStatement.close();
+				
 				response = "{ \"identifier\":\""+ id + "\" }";
 			}
 			else
@@ -289,7 +301,7 @@ public class WebController {
 		String s = "error";
 		try {
 			conn = getConnection();
-			Statement stm = conn.createStatement();
+			conn.createStatement();
 			
 			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable");
 			
@@ -301,22 +313,18 @@ public class WebController {
 			boolean isEmpty = true;
 			while(re.next())
 			{
-				isEmpty = false;
-				
 				String data = re.getString(1);
 				
 				String currentFormId = getFormIdStringFromDataString(data);
 				
-				if (currentFormId == formid) {
-					String id = getIdStringFromDataString(data);
+				if (currentFormId.equals(formid)) {
+					isEmpty = false;
+					
 					String metadata= getMetadataStringFromDataString(data);
 					
-					b.append("{ \"id\": ");
-					b.append(id);
-					
-					b.append(", \"metadata\": \"");
+					b.append("{ \"metadata\": ");
 					b.append(metadata);
-					b.append("\" } ,");
+					b.append("} ,");
 				}
 			}
 			
@@ -356,13 +364,13 @@ public class WebController {
 		try {
 			conn = getConnection();
 			
-			PreparedStatement statement = conn.prepareStatement("SELECT * from datatable where id =?");
+			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable where id =?");
 			statement.setInt(1, Integer.parseInt(id));
 			
 			ResultSet re = statement.executeQuery();
 			if(re.next())
 			{
-				s = re.getString(4);				
+				s = re.getString(1);				
 			}
 			
 			System.out.println(s);
@@ -395,10 +403,7 @@ public class WebController {
 			
 			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
 			
-			String id = getIdStringFromDataString(json);
-			
 			statement.setString(1, json);
-			statement.setString(2, id);
 			
 			statement.executeUpdate();
 			statement.close();
@@ -423,10 +428,10 @@ public class WebController {
 	
 	// formular > id	
 	public String getIdStringFromFormularString(String formularString) {
-		JsonElement dataElement = new JsonParser().parse(formularString);
-		JsonObject  idObject = dataElement.getAsJsonObject();
-	    idObject = idObject.getAsJsonObject("id");
-	    String idString = idObject.toString();
+		JsonElement formElement = new JsonParser().parse(formularString);
+		JsonObject  metadataObject = formElement.getAsJsonObject();
+		metadataObject = metadataObject.getAsJsonObject("metadata");
+	    String idString = metadataObject.get("form_id").toString();
 	    return idString;
 	}
 	
@@ -436,13 +441,17 @@ public class WebController {
 	    JsonObject  metadataObject = formularElement.getAsJsonObject();
 	    metadataObject = metadataObject.getAsJsonObject("metadata");
 	    String metadataString = metadataObject.toString();
+	    System.out.println(metadataString);
 	    return metadataString;
 	}
 
 	// data > id	
 	public String getIdStringFromDataString(String dataString) {
-		//right now same shit as for forms
-	    return getIdStringFromFormularString(dataString);
+		JsonElement dataElement = new JsonParser().parse(dataString);
+		JsonObject  metadataObject = dataElement.getAsJsonObject();
+		metadataObject = metadataObject.getAsJsonObject("metadata");
+	    String idString = metadataObject.get("data_id").toString();
+	    return idString;
 	}
 	
 	// data > formid	
@@ -450,8 +459,7 @@ public class WebController {
 		JsonElement dataElement = new JsonParser().parse(dataString);
 	    JsonObject metadataObject = dataElement.getAsJsonObject();
 	    metadataObject = metadataObject.getAsJsonObject("metadata");
-	    JsonObject formIdObject = metadataObject.getAsJsonObject("form_id");
-	    String formIdString = formIdObject.toString();
+	    String formIdString = metadataObject.get("form_id").getAsString();
 	    return formIdString;
 	}
 	
