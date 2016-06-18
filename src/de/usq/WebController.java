@@ -49,14 +49,14 @@ public class WebController {
 			statement.setString(1, data);
 			statement.executeUpdate();
 			ResultSet result = statement.getGeneratedKeys();
-			statement.close();
 			
 			if(result.next())
 			{	
 				long id = result.getLong(1);
+				statement.close();
 				
 				//replace the id
-				String updatedData = data.replaceAll("\"form_id\":\"###REPLACE_FORM_ID###\"", "\"form_id\":\""+id+"\"");				
+				String updatedData = data.replaceAll("\"form_id\"[ \n\r\t]*:[ \n\r\t]*\"###REPLACE_FORM_ID###\"", "\"form_id\":\""+id+"\"");				
 				
 				//update the data set with its just generated ID
 				PreparedStatement updateStatement = conn.prepareStatement("UPDATE testtable set formtext =? where id =?");
@@ -101,7 +101,6 @@ public class WebController {
 		String response = "";
 		Connection conn = null;
 		try {
-			System.out.println("lol");
 			conn = getConnection();
 			Statement stm = conn.createStatement();
 			ResultSet result = stm.executeQuery("SELECT FORMTEXT from testtable");
@@ -260,14 +259,14 @@ public class WebController {
 			statement.setString(1, data);
 			statement.executeUpdate();
 			ResultSet result = statement.getGeneratedKeys();
-			statement.close();
 			
 			if(result.next())
 			{
 				long id = result.getLong(1);
+				statement.close();
 				
 				//replace the id
-				String updatedData = data.replaceAll("\"data_id\":\"###REPLACE_DATA_ID###\"", "\"data_id\":\""+id+"\"");				
+				String updatedData = data.replaceAll("\"data_id\"[ \n\r\t]*:[ \n\r\t]*\"###REPLACE_DATA_ID###\"", "\"data_id\":\""+id+"\"");				
 				
 				//update the data set with its just generated ID
 				PreparedStatement updateStatement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
@@ -316,9 +315,7 @@ public class WebController {
 			conn.createStatement();
 			
 			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable");
-			
 			ResultSet result = statement.executeQuery();
-			statement.close();
 			
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("{\"dataList\":[");
@@ -327,7 +324,6 @@ public class WebController {
 			while(result.next())
 			{
 				String data = result.getString(1);
-				
 				String currentFormId = getFormIdStringFromDataString(data);
 				
 				if (currentFormId.equals(formid)) {
@@ -340,6 +336,7 @@ public class WebController {
 					buffer.append("} ,");
 				}
 			}
+			statement.close();
 			
 			if (!isEmpty)
 			{
@@ -348,11 +345,11 @@ public class WebController {
 			
 			buffer.append("]}");
 			
-			response  = buffer.toString();
+			response = buffer.toString();
 			
 		} catch (SQLException e) {
 			response  = "{ \"error\": true }"; 
-			System.out.println(response );
+			System.out.println(response);
 			System.out.println();
 			e.printStackTrace();
 		}
@@ -364,7 +361,7 @@ public class WebController {
 			}
 		}
 		 
-		System.out.println(response );
+		System.out.println(response);
 		System.out.println();
 		return response ;
 	}
@@ -384,12 +381,12 @@ public class WebController {
 			PreparedStatement statement = conn.prepareStatement("SELECT CONTENT from datatable where id =?");
 			statement.setInt(1, Integer.parseInt(id));
 			ResultSet result = statement.executeQuery();
-			statement.close();
 			
 			if(result.next())
 			{
 				response = result.getString(1);				
 			}
+			statement.close();
 			
 		} catch (SQLException e) {
 			response = "{ \"error\": true }"; 
@@ -426,6 +423,8 @@ public class WebController {
 			
 			PreparedStatement statement = conn.prepareStatement("UPDATE datatable set content =? where id =?");
 			statement.setString(1, data);
+			String dataid = getIdStringFromDataString(data);
+			statement.setInt(2, Integer.parseInt(dataid));
 			int affectedRows = statement.executeUpdate();
 			statement.close();
 			
@@ -451,6 +450,9 @@ public class WebController {
 				e.printStackTrace();
 			}
 		}
+		
+		System.out.println(response);
+		System.out.println();
 		return response;
 	}
 	
@@ -465,7 +467,7 @@ public class WebController {
 		JsonObject  metadataObject = formElement.getAsJsonObject();
 		metadataObject = metadataObject.getAsJsonObject("metadata");
 	    String idString = metadataObject.get("form_id").toString();
-	    return idString;
+	    return stringOutOfString(idString);
 	}
 	
 	// formular > metadata
@@ -482,8 +484,8 @@ public class WebController {
 		JsonElement dataElement = new JsonParser().parse(dataString);
 		JsonObject  metadataObject = dataElement.getAsJsonObject();
 		metadataObject = metadataObject.getAsJsonObject("metadata");
-	    String idString = metadataObject.get("data_id").toString();
-	    return idString;
+	    String idString = metadataObject.get("data_id").getAsString();
+	    return stringOutOfString(idString);
 	}
 	
 	// data > formid	
@@ -491,14 +493,32 @@ public class WebController {
 		JsonElement dataElement = new JsonParser().parse(dataString);
 	    JsonObject metadataObject = dataElement.getAsJsonObject();
 	    metadataObject = metadataObject.getAsJsonObject("metadata");
-	    String formIdString = metadataObject.get("form_id").getAsString();
-	    return formIdString;
+	    String formIdString = metadataObject.get("form_id").toString();
+	    return stringOutOfString(formIdString);
 	}
 	
 	// data > metadata	
 	public String getMetadataStringFromDataString(String dataString) {
 		//right now same shit as for forms
 	    return getMetadataStringFromFormularString(dataString);
+	}
+	
+	public String stringOutOfString(String string) {
+		String updatedString = string;
+		
+		if (string.length() > 2 &&
+			string.charAt(0) == '"' &&
+			string.charAt(string.length()-1) == '"') {
+			
+			StringBuffer buffer = new StringBuffer();
+			System.out.println(string);
+			buffer.append(string);
+			buffer.deleteCharAt(0);
+			buffer.deleteCharAt(buffer.length() - 1);
+			updatedString = buffer.toString();
+		}
+		
+		return updatedString;
 	}
 	
 	
