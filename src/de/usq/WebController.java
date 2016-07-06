@@ -96,7 +96,7 @@ public class WebController {
 	@Produces("application/json")
 	public String formIDs() throws ClassNotFoundException
 	{
-		System.out.println("GET Request received: /rest/ids"); 
+		System.out.println("GET Request received: /rest/form/ids"); 
 		
 		String response = "";
 		Connection conn = null;
